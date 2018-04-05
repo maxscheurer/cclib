@@ -1110,9 +1110,53 @@ cannot be determined. Rerun without `$molecule read`."""
                         have_adc_data = True
                 if have_adc_data:
                     print("Parsing ADC excited states summary.")
+                    etenergies = []
+                    etsyms = []
+                    etmult = []
+                    etoscs = []
+                    etsecs = []
+                    etconv = []
+                    ettransdipmoms = []
+                    etdipmoms = []
+                    spinmap = {'alpha': 0, 'beta': 1}
                     self.skip_lines(inputfile, ['dashes', 'blank'])
                     line = next(inputfile)
-                    print(line)
+                    while 'Time of ADC calculation:' not in line:
+                        if 'Excited state' in line:
+                            print(line.strip().split()[-1])
+                            if line.strip().split()[-1] == "[converged]":
+                                etconv.append(True)
+                            else:
+                                etconv.append(False)
+                            etmult.append(line.strip().split()[3].strip("(),"))
+                            self.skip_lines(inputfile, ['dashes'])
+                            while list(set(line.strip())) != ['-']:
+                                lline = line.strip().split()
+                                if "Excitation energy:" in line:
+                                    etenergies.append(float(lline[-2]))
+                                if "Osc. strength:" in line:
+                                    etoscs.append(float(lline[-1]))
+                                if "Trans. dip. moment [a.u.]:" in line:
+                                    ettransdipmoms.append([float(i.strip(' ,()[]')) for i in lline[-3:]])
+                                if "Total dipole [Debye]:" in line:
+                                    etdipmoms.append(float(lline[-1]))
+                                if "Important amplitudes:" in line:
+                                    print("TODO: amplitudes")
+
+                                line = next(inputfile)
+
+                        line = next(inputfile)
+                    print(etconv, etmult, etenergies, ettransdipmoms, etdipmoms)
+                    self.set_attribute('etenergies', etenergies)
+                    self.set_attribute('etsyms', etsyms)
+                    self.set_attribute('etoscs', etoscs)
+                    self.set_attribute('etsecs', etsecs)
+                    self.set_attribute('etmult', etmult)
+                    self.set_attribute('etconv', etconv)
+                    self.set_attribute('ettransdipmoms', ettransdipmoms)
+                    self.set_attribute('etdipmoms', etdipmoms)
+
+
 
 
             # Static and dynamic polarizability from mopropman.
