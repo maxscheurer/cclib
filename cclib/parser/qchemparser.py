@@ -830,9 +830,12 @@ cannot be determined. Rerun without `$molecule read`."""
                     if len(entry) > 0:
                         if entry[0] == str(iter_counter):
                             # Q-Chem only outputs one error metric.
-                            error = float(entry[2])
-                            values.append([error])
-                            iter_counter += 1
+                            try:
+                                error = float(entry[2])
+                                values.append([error])
+                                iter_counter += 1
+                            except Exception as e:
+                                pass
 
                     try:
                         line = next(inputfile)
@@ -880,8 +883,27 @@ cannot be determined. Rerun without `$molecule read`."""
                 #self.scfenergies.append(utils.convertor(scfenergy, 'hartree', 'eV'))
                 self.scfenergies.append(scfenergy)
 
-            if 'Polarizable embedding summary' in line:
+            if 'Polarizable Embedding Summary:' in line:
                 print("PE")
+                peen = {"Electrostatics" : {}, "Polarization": {}, "Total": 0.0}
+                if not hasattr(self, 'peenergies'):
+                    self.peenergies = peen
+                self.skip_lines(inputfile, ['blank'])
+                line = next(inputfile)
+                while "Total Energy:" not in line:
+                    k = line.strip().replace(":","")
+                    if k in peen.keys():
+                        line = next(inputfile)
+                        while line.strip() != "":
+                            kk = line.strip(' :').split()
+                            peen[k][kk[0]] = float(kk[-1])
+                            line = next(inputfile)
+                    line = next(inputfile)
+                if "Total Energy:" in line:
+                    peen["Total"] = float(line.strip().split()[-1])
+
+                self.set_attribute('peenergies', peen)
+
 
             # Geometry optimization.
 
