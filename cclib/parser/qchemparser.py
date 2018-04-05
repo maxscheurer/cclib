@@ -112,7 +112,8 @@ class QChem(logfileparser.Logfile):
             'HF',
             'MP2', 'RI-MP2', 'LOCAL_MP2', 'MP4',
             'CCD', 'CCSD', 'CCSD(T)',
-            'QCISD', 'QCISD(T)'
+            'QCISD', 'QCISD(T)',
+            'ADC(2)', 'ADC(2)-s', 'ADC(2)-x', 'ADC(3)'
         ]
         # create empty list for the computing time to be stored in. 
         self.metadata['wall_time'] =[]
@@ -876,7 +877,11 @@ cannot be determined. Rerun without `$molecule read`."""
                 if not hasattr(self, 'scfenergies'):
                     self.scfenergies = []
                 scfenergy = float(line.split()[-1])
-                self.scfenergies.append(utils.convertor(scfenergy, 'hartree', 'eV'))
+                #self.scfenergies.append(utils.convertor(scfenergy, 'hartree', 'eV'))
+                self.scfenergies.append(scfenergy)
+
+            if 'Polarizable embedding summary' in line:
+                print("PE")
 
             # Geometry optimization.
 
@@ -1096,6 +1101,19 @@ cannot be determined. Rerun without `$molecule read`."""
                 self.set_attribute('etsyms', etsyms)
                 self.set_attribute('etoscs', etoscs)
                 self.set_attribute('etsecs', etsecs)
+
+            if 'Excited State Summary' in line:
+                print(self.metadata["methods"])
+                have_adc_data = False
+                for method in self.metadata["methods"]:
+                    if "adc" in method.lower():
+                        have_adc_data = True
+                if have_adc_data:
+                    print("Parsing ADC excited states summary.")
+                    self.skip_lines(inputfile, ['dashes', 'blank'])
+                    line = next(inputfile)
+                    print(line)
+
 
             # Static and dynamic polarizability from mopropman.
             if 'Polarizability (a.u.)' in line:
