@@ -1095,7 +1095,7 @@ cannot be determined. Rerun without `$molecule read`."""
                     ettransdipmoms = []
                     etdipmoms = []
                     spinmap = {'alpha': 0, 'beta': 1}
-                    self.skip_lines(inputfile, ['dashes', 'blank'])
+                    # self.skip_lines(inputfile, ['dashes', 'blank'])
                     line = next(inputfile)
                     while 'Time of ADC calculation:' not in line:
                         if 'Excited state' in line:
@@ -1106,42 +1106,44 @@ cannot be determined. Rerun without `$molecule read`."""
                                 etconv.append(False)
                             etmult.append(line.strip().split()[3].strip("(),"))
                             self.skip_lines(inputfile, ['dashes'])
+                            # while list(set(line.strip())) != ['-']:
+                        lline = line.strip().split()
+                        if "Excitation energy:" in line:
+                            etenergies.append(float(lline[-2]))
+                        if "PE ptSS energy correction:" in line:
+                            self.peenergies["ptSS"] = float(lline[-2])
+                        if "PE ptLR energy correction:" in line:
+                            self.peenergies["ptLR"] = float(lline[-2])
+                        if "Osc. strength:" in line:
+                            etoscs.append(float(lline[-1]))
+                        if "Trans. dip. moment [a.u.]:" in line:
+                            ettransdipmoms.append([float(i.strip(' ,()[]')) for i in lline[-3:]])
+                        if "Total dipole [Debye]:" in line:
+                            etdipmoms.append(float(lline[-1]))
+                        if "Important amplitudes:" in line:
+                            print("TODO: amplitudes")
+                            single_exc_elements = 7
+                            double_exc_elements = 13
+                            sec = []
+                            next(inputfile)
+                            next(inputfile)
+                            line = next(inputfile)
                             while list(set(line.strip())) != ['-']:
-                                lline = line.strip().split()
-                                if "Excitation energy:" in line:
-                                    etenergies.append(float(lline[-2]))
-                                if "PE ptSS energy correction:" in line:
-                                    
-                                if "Osc. strength:" in line:
-                                    etoscs.append(float(lline[-1]))
-                                if "Trans. dip. moment [a.u.]:" in line:
-                                    ettransdipmoms.append([float(i.strip(' ,()[]')) for i in lline[-3:]])
-                                if "Total dipole [Debye]:" in line:
-                                    etdipmoms.append(float(lline[-1]))
-                                if "Important amplitudes:" in line:
-                                    print("TODO: amplitudes")
-                                    single_exc_elements = 7
-                                    double_exc_elements = 13
-                                    sec = []
-                                    next(inputfile)
-                                    next(inputfile)
-                                    line = next(inputfile)
-                                    while list(set(line.strip())) != ['-']:
-                                        ampl_line = line.strip().split()
-                                        if len(ampl_line) == single_exc_elements:
-                                            print("single")
-                                            # i, a, v
-                                            sec.append([ampl_line[i] for i in [0, 3, -1]])
-                                        elif len(ampl_line) == double_exc_elements:
-                                            # i, j, a, b, v
-                                            sec.append([ampl_line[i] for i in [0, 3, 6, 9, -1]])
-                                        line = next(inputfile)
-
-                                    etsecs.append(sec)
-
+                                ampl_line = line.strip().split()
+                                if len(ampl_line) == single_exc_elements:
+                                    print("single")
+                                    # i, a, v
+                                    sec.append([ampl_line[i] for i in [0, 3, -1]])
+                                elif len(ampl_line) == double_exc_elements:
+                                    # i, j, a, b, v
+                                    sec.append([ampl_line[i] for i in [0, 3, 6, 9, -1]])
                                 line = next(inputfile)
 
+                            etsecs.append(sec)
+
                         line = next(inputfile)
+
+                        # line = next(inputfile)
                     print(etconv, etmult, etenergies, ettransdipmoms, etdipmoms)
                     print(etsecs)
                     self.set_attribute('etenergies', etenergies)
