@@ -113,7 +113,7 @@ class QChem(logfileparser.Logfile):
             'MP2', 'RI-MP2', 'LOCAL_MP2', 'MP4',
             'CCD', 'CCSD', 'CCSD(T)',
             'QCISD', 'QCISD(T)',
-            'ADC(2)', 'ADC(2)-s', 'ADC(2)-x', 'ADC(3)'
+            'ADC(1)', 'ADC(2)', 'ADC(2)-s', 'ADC(2)-x', 'ADC(3)'
         ]
         # create empty list for the computing time to be stored in. 
         self.metadata['wall_time'] =[]
@@ -885,7 +885,9 @@ cannot be determined. Rerun without `$molecule read`."""
 
             if 'Polarizable Embedding Summary:' in line:
                 print("PE")
-                peen = {"Electrostatics" : {}, "Polarization": {}, "Total": 0.0}
+                peen = {"Electrostatics" : {}, "Polarization": {},
+                        "Total": 0.0,
+                        "ptSS": [], "ptLR": []}
                 if not hasattr(self, 'peenergies'):
                     self.peenergies = peen
                 self.skip_lines(inputfile, ['blank'])
@@ -900,6 +902,31 @@ cannot be determined. Rerun without `$molecule read`."""
                             line = next(inputfile)
                     line = next(inputfile)
                 if "Total Energy:" in line:
+                    peen["Total"] = float(line.strip().split()[-1])
+
+                self.set_attribute('peenergies', peen)
+
+            # pelib
+            if 'Polarizable embedding energy contributions:' in line:
+                print("PE")
+                peen = {"Electrostatic contributions" : {},
+                        "Polarization contributions": {},
+                        "Total": 0.0,
+                        "ptSS": [], "ptLR": []}
+                if not hasattr(self, 'peenergies'):
+                    self.peenergies = peen
+                # self.skip_lines(inputfile, ['blank'])
+                line = next(inputfile)
+                while "Total PE energy:" not in line:
+                    k = line.strip().replace(":","")
+                    if k in peen.keys():
+                        line = next(inputfile)
+                        while line.strip() != "":
+                            kk = line.strip(' :').split()
+                            peen[k][kk[0]] = float(kk[-1])
+                            line = next(inputfile)
+                    line = next(inputfile)
+                if "Total PE energy:" in line:
                     peen["Total"] = float(line.strip().split()[-1])
 
                 self.set_attribute('peenergies', peen)
@@ -1157,9 +1184,9 @@ cannot be determined. Rerun without `$molecule read`."""
                         if "Excitation energy:" in line:
                             etenergies.append(float(lline[-2]))
                         if "PE ptSS energy correction:" in line:
-                            self.peenergies["ptSS"] = float(lline[-2])
+                            self.peenergies["ptSS"].append(float(lline[-2]))
                         if "PE ptLR energy correction:" in line:
-                            self.peenergies["ptLR"] = float(lline[-2])
+                            self.peenergies["ptLR"].append(float(lline[-2]))
                         if "Osc. strength:" in line:
                             etoscs.append(float(lline[-1]))
                         if "Trans. dip. moment [a.u.]:" in line:
