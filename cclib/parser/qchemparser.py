@@ -1156,6 +1156,8 @@ cannot be determined. Rerun without `$molecule read`."""
                                 lline = line.strip().split()
                                 if "Excitation energy:" in line:
                                     etenergies.append(float(lline[-2]))
+                                if "PE ptSS energy correction:" in line:
+                                    
                                 if "Osc. strength:" in line:
                                     etoscs.append(float(lline[-1]))
                                 if "Trans. dip. moment [a.u.]:" in line:
@@ -1164,11 +1166,30 @@ cannot be determined. Rerun without `$molecule read`."""
                                     etdipmoms.append(float(lline[-1]))
                                 if "Important amplitudes:" in line:
                                     print("TODO: amplitudes")
+                                    single_exc_elements = 7
+                                    double_exc_elements = 13
+                                    sec = []
+                                    next(inputfile)
+                                    next(inputfile)
+                                    line = next(inputfile)
+                                    while list(set(line.strip())) != ['-']:
+                                        ampl_line = line.strip().split()
+                                        if len(ampl_line) == single_exc_elements:
+                                            print("single")
+                                            # i, a, v
+                                            sec.append([ampl_line[i] for i in [0, 3, -1]])
+                                        elif len(ampl_line) == double_exc_elements:
+                                            # i, j, a, b, v
+                                            sec.append([ampl_line[i] for i in [0, 3, 6, 9, -1]])
+                                        line = next(inputfile)
+
+                                    etsecs.append(sec)
 
                                 line = next(inputfile)
 
                         line = next(inputfile)
                     print(etconv, etmult, etenergies, ettransdipmoms, etdipmoms)
+                    print(etsecs)
                     self.set_attribute('etenergies', etenergies)
                     self.set_attribute('etsyms', etsyms)
                     self.set_attribute('etoscs', etoscs)
