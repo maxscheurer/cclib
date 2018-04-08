@@ -884,7 +884,6 @@ cannot be determined. Rerun without `$molecule read`."""
                 self.scfenergies.append(scfenergy)
 
             if 'Polarizable Embedding Summary:' in line:
-                print("PE")
                 peen = {"Electrostatics" : {}, "Polarization": {},
                         "Total": 0.0,
                         "ptSS": [], "ptLR": []}
@@ -1152,13 +1151,11 @@ cannot be determined. Rerun without `$molecule read`."""
                 self.set_attribute('etsecs', etsecs)
 
             if 'Excited State Summary' in line:
-                print(self.metadata["methods"])
                 have_adc_data = False
                 for method in self.metadata["methods"]:
                     if "adc" in method.lower():
                         have_adc_data = True
                 if have_adc_data:
-                    print("Parsing ADC excited states summary.")
                     etenergies = []
                     etsyms = []
                     etmult = []
@@ -1172,14 +1169,12 @@ cannot be determined. Rerun without `$molecule read`."""
                     line = next(inputfile)
                     while 'Time of ADC calculation:' not in line:
                         if 'Excited state' in line:
-                            print(line.strip().split()[-1])
                             if line.strip().split()[-1] == "[converged]":
                                 etconv.append(True)
                             else:
                                 etconv.append(False)
                             etmult.append(line.strip().split()[3].strip("(),"))
                             self.skip_lines(inputfile, ['dashes'])
-                            # while list(set(line.strip())) != ['-']:
                         lline = line.strip().split()
                         if "Excitation energy:" in line:
                             etenergies.append(float(lline[-2]))
@@ -1194,7 +1189,6 @@ cannot be determined. Rerun without `$molecule read`."""
                         if "Total dipole [Debye]:" in line:
                             etdipmoms.append(float(lline[-1]))
                         if "Important amplitudes:" in line:
-                            print("TODO: amplitudes")
                             single_exc_elements = 7
                             double_exc_elements = 13
                             sec = []
@@ -1204,21 +1198,17 @@ cannot be determined. Rerun without `$molecule read`."""
                             while list(set(line.strip())) != ['-']:
                                 ampl_line = line.strip().split()
                                 if len(ampl_line) == single_exc_elements:
-                                    print("single")
                                     # i, a, v
                                     sec.append([ampl_line[i] for i in [0, 3, -1]])
                                 elif len(ampl_line) == double_exc_elements:
                                     # i, j, a, b, v
                                     sec.append([ampl_line[i] for i in [0, 3, 6, 9, -1]])
                                 line = next(inputfile)
-
                             etsecs.append(sec)
-
                         line = next(inputfile)
 
-                        # line = next(inputfile)
-                    print(etconv, etmult, etenergies, ettransdipmoms, etdipmoms)
-                    print(etsecs)
+                    # print(etconv, etmult, etenergies, ettransdipmoms, etdipmoms)
+                    # print(etsecs)
                     self.set_attribute('etenergies', etenergies)
                     self.set_attribute('etsyms', etsyms)
                     self.set_attribute('etoscs', etoscs)

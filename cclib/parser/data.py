@@ -129,6 +129,7 @@ class ccData:
        "etconv":           Attribute(list,             'converged',                   'transitions'),
        "etmult":           Attribute(list,             'multipliciy',                 'transitions'),
        "ettransdipmoms":   Attribute(numpy.ndarray,    'trans. dip. moments [a.u.]',  'transitions'),
+       "etdipmoms":        Attribute(numpy.ndarray,    'exc. dip. moments [a.u.]',    'transitions'),
        "freeenergy":       Attribute(float,            'free energy',                 'properties:energy'),
        "fonames":          Attribute(list,             'orbital names',               'fragments'),
        "fooverlaps":       Attribute(numpy.ndarray,    'orbital overlap',             'fragments'),
