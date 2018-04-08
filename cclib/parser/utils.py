@@ -61,7 +61,7 @@ def symmetrize(m, use_triangle='lower'):
 
 def convertor(value, fromunits, tounits):
     """Convert from one set of units to another.
-    
+
     Sources:
         NIST 2010 CODATA (http://physics.nist.gov/cuu/Constants/index.html)
         Documentation of GAMESS-US or other programs as noted
@@ -83,6 +83,7 @@ def convertor(value, fromunits, tounits):
         "wavenumber_to_Hz":       lambda x: x * 29.9792458,
 
         "eV_to_wavenumber": lambda x: x * 8065.54429,
+        "eV_to_nm":         lambda x: 1e7 / (x * 8065.54429),
         "eV_to_hartree":    lambda x: x / 27.21138505,
         "eV_to_kcal/mol":   lambda x: x * 23.060548867,
         "eV_to_kJ/mol":     lambda x: x * 96.4853364596,
