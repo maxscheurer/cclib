@@ -1052,6 +1052,9 @@ cannot be determined. Rerun without `$molecule read`."""
                     # if 'excitation energy' in line:
                     #     etenergy = utils.convertor(float(line.split()[-1]), 'eV', 'wavenumber')
                     #     etenergies.append(etenergy)
+                    # if 'excitation energy' in line:
+                    #     etenergy = float(line.split()[-1])
+                    #     etenergies.append(etenergy)
                     if 'Multiplicity' in line:
                         etsym = line.split()[1]
                         etsyms.append(etsym)
