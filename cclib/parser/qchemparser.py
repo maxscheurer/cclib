@@ -1167,6 +1167,7 @@ cannot be determined. Rerun without `$molecule read`."""
                     etconv = []
                     ettransdipmoms = []
                     etdipmoms = []
+                    etelectronholedists = []
                     spinmap = {'alpha': 0, 'beta': 1}
                     # self.skip_lines(inputfile, ['dashes', 'blank'])
                     line = next(inputfile)
@@ -1208,6 +1209,11 @@ cannot be determined. Rerun without `$molecule read`."""
                                     sec.append([ampl_line[i] for i in [0, 3, 6, 9, -1]])
                                 line = next(inputfile)
                             etsecs.append(sec)
+                        if "Exciton analysis of the transition density matrix" in line:
+                            while "omega =" not in line:
+                                if "|<r_e - r_h>| [Ang]:" in line:
+                                    etelectronholedists.append(float(line.strip().split()[-1]))
+                                line = next(inputfile)
                         line = next(inputfile)
 
                     # print(etconv, etmult, etenergies, ettransdipmoms, etdipmoms)
@@ -1219,6 +1225,8 @@ cannot be determined. Rerun without `$molecule read`."""
                     self.set_attribute('etmult', etmult)
                     self.set_attribute('etconv', etconv)
                     self.set_attribute('ettransdipmoms', ettransdipmoms)
+                    self.set_attribute('etelectronholedists',
+                                       etelectronholedists)
                     self.set_attribute('etdipmoms', etdipmoms)
 
 
