@@ -1549,6 +1549,19 @@ cannot be determined. Rerun without `$molecule read`."""
                 grad = QChem.parse_matrix(inputfile, 3, self.natom, ncolsblock)
                 self.grads.append(grad.T)
 
+            # get the excited state dipole moment from TDDFT/TDA calculations
+            if 'Excited-State Multipoles' in line:
+                nstates = len(self.etenergies)
+                state = 0
+                etdipmoms = []
+                while(state < nstates):
+                    line = next(inputfile)
+                    if "Tot" in line:
+                        etdipmoms.append(float(line.strip().split()[-1]))
+                        state += 1
+                self.set_attribute('etdipmoms', etdipmoms)
+
+
             # (Static) polarizability from frequency calculations.
             if 'Polarizability Matrix (a.u.)' in line:
                 if not hasattr(self, 'polarizabilities'):
