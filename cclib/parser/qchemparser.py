@@ -113,7 +113,7 @@ class QChem(logfileparser.Logfile):
             'MP2', 'RI-MP2', 'LOCAL_MP2', 'MP4',
             'CCD', 'CCSD', 'CCSD(T)',
             'QCISD', 'QCISD(T)',
-            'ADC(1)', 'ADC(2)', 'ADC(2)-s', 'ADC(2)-x', 'ADC(3)'
+            'ADC(1)', 'ADC(2)', 'ADC(2)-s', 'ADC(2)-X', 'ADC(3)'
         ]
         # create empty list for the computing time to be stored in. 
         self.metadata['wall_time'] =[]
@@ -1171,7 +1171,7 @@ cannot be determined. Rerun without `$molecule read`."""
                     spinmap = {'alpha': 0, 'beta': 1}
                     # self.skip_lines(inputfile, ['dashes', 'blank'])
                     line = next(inputfile)
-                    while 'Time of ADC calculation:' not in line:
+                    while 'Time of ADC calculation:' not in line and "Transition Summary" not in line:
                         if 'Excited state' in line:
                             if line.strip().split()[-1] == "[converged]":
                                 etconv.append(True)
@@ -1216,6 +1216,45 @@ cannot be determined. Rerun without `$molecule read`."""
                                 line = next(inputfile)
                         line = next(inputfile)
 
+                    # read ES->ES
+                    es2es = {}
+                    if "Transition Summary" in line:
+                        lastTransition = None
+                        while 'Time of ADC calculation:' not in line:
+                            lline = line.strip().split()
+                            if 'Transition from excited state' in line:
+                                if lastTransition is None:
+                                    lastTransition = {}
+                                else:
+                                    if lastTransition["from"] in es2es:
+                                        es2es[lastTransition["from"]].append(lastTransition)
+                                        lastTransition = {}
+                                    else:
+                                        es2es[lastTransition["from"]] = []
+                                        es2es[lastTransition["from"]].append(lastTransition)
+                                        lastTransition = {}
+                            #     if line.strip().split()[-1] == "[converged]":
+                            #         etconv.append(True)
+                            #     else:
+                            #         etconv.append(False)
+                            #     etmult.append(line.strip().split()[3].strip("(),"))
+                                lastTransition["from"] = int(lline[4])
+                                lastTransition["to"] = int(lline[8][:-1])
+                                self.skip_lines(inputfile, ['dashes'])
+                            if "Excitation energy:" in line:
+                                lastTransition["etenergy"] = float(lline[-2])
+                            # if "PE ptSS energy correction:" in line:
+                            #     self.peenergies["ptSS"].append(float(lline[-2]))
+                            # if "PE ptLR energy correction:" in line:
+                            #     self.peenergies["ptLR"].append(float(lline[-2]))
+                            # if "Osc. strength:" in line:
+                            #     etoscs.append(float(lline[-1]))
+                            # if "Trans. dip. moment [a.u.]:" in line:
+                            #     ettransdipmoms.append([float(i.strip(' ,()[]')) for i in lline[-3:]])
+                            line = next(inputfile)
+                    # for bla in es2es[1]:
+                    #     print(bla["etenergy"])
+
                     # print(etconv, etmult, etenergies, ettransdipmoms, etdipmoms)
                     # print(etsecs)
                     self.set_attribute('etenergies', etenergies)
@@ -1229,6 +1268,85 @@ cannot be determined. Rerun without `$molecule read`."""
                                        etelectronholedists)
                     self.set_attribute('etdipmoms', etdipmoms)
 
+            if 'Ionized State Summary' in line:
+                have_adc_data = False
+                for method in self.metadata["methods"]:
+                    if "adc" in method.lower():
+                        have_adc_data = True
+                if have_adc_data:
+                    etenergies = []
+                    etsyms = []
+                    etmult = []
+                    etoscs = []
+                    etsecs = []
+                    etconv = []
+                    ettransdipmoms = []
+                    etdipmoms = []
+                    etelectronholedists = []
+                    spinmap = {'alpha': 0, 'beta': 1}
+                    # self.skip_lines(inputfile, ['dashes', 'blank'])
+                    line = next(inputfile)
+                    while 'Time of ADC calculation:' not in line and "Transition Summary" not in line:
+                        if 'Ionized state' in line:
+                            if line.strip().split()[-1] == "[converged]":
+                                etconv.append(True)
+                            else:
+                                etconv.append(False)
+                            etmult.append(line.strip().split()[3].strip("(),"))
+                            self.skip_lines(inputfile, ['dashes'])
+                        lline = line.strip().split()
+                        if "Ionization energy:" in line:
+                            etenergies.append(float(lline[-2]))
+                        if "PE ptSS energy correction:" in line:
+                            self.peenergies["ptSS"].append(float(lline[-2]))
+                        if "PE ptLR energy correction:" in line:
+                            self.peenergies["ptLR"].append(float(lline[-2]))
+                        if "Pole strength:" in line:
+                            etoscs.append(float(lline[-1]))
+                        if "Trans. dip. moment [a.u.]:" in line:
+                            ettransdipmoms.append([float(i.strip(' ,()[]')) for i in lline[-3:]])
+                        if "Total dipole [Debye]:" in line:
+                            etdipmoms.append(float(lline[-1]))
+                        if "Important amplitudes:" in line:
+                            single_ion_elements = 4
+                            double_ion_elements = 10
+                            sec = []
+                            next(inputfile)
+                            next(inputfile)
+                            line = next(inputfile)
+                            while list(set(line.strip())) != ['-']:
+                                ampl_line = line.strip().split()
+                                if len(ampl_line) == single_exc_elements:
+                                    # i, a, v
+                                    sec.append([ampl_line[i] for i in [0, 3, -1]])
+                                elif len(ampl_line) == double_exc_elements:
+                                    # i, j, a, b, v
+                                    sec.append([ampl_line[i] for i in [0, 3, 6, 9, -1]])
+                                line = next(inputfile)
+                            etsecs.append(sec)
+                        if "Exciton analysis of the transition density matrix" in line:
+                            while "omega =" not in line:
+                                if "|<r_e - r_h>| [Ang]:" in line:
+                                    etelectronholedists.append(float(line.strip().split()[-1]))
+                                line = next(inputfile)
+                        line = next(inputfile)
+
+                    # read state->state
+                    if "Transition Summary" in line:
+                        pass
+
+                    # print(etconv, etmult, etenergies, ettransdipmoms, etdipmoms)
+                    # print(etsecs)
+                    self.set_attribute('etenergies', etenergies)
+                    self.set_attribute('etsyms', etsyms)
+                    self.set_attribute('etoscs', etoscs)
+                    self.set_attribute('etsecs', etsecs)
+                    self.set_attribute('etmult', etmult)
+                    self.set_attribute('etconv', etconv)
+                    self.set_attribute('ettransdipmoms', ettransdipmoms)
+                    self.set_attribute('etelectronholedists',
+                                       etelectronholedists)
+                    self.set_attribute('etdipmoms', etdipmoms)
 
 
 
