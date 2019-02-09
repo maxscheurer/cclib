@@ -1134,7 +1134,7 @@ cannot be determined. Rerun without `$molecule read`."""
                             etmult.append(line.strip().split()[3].strip("(),"))
                             self.skip_lines(inputfile, ['dashes'])
                         lline = line.strip().split()
-                        if "Excitation energy:" in line:
+                        if "Excitation energy:" in line or "Excitation energy (PCM 0th order)" in line:
                             etenergies.append(float(lline[-2]))
                         if "PE ptSS energy correction:" in line:
                             self.peenergies["ptSS"].append(float(lline[-2]))
