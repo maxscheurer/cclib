@@ -109,7 +109,8 @@ class QChem(logfileparser.Logfile):
             'MP2', 'RI-MP2', 'LOCAL_MP2', 'MP4',
             'CCD', 'CCSD', 'CCSD(T)',
             'QCISD', 'QCISD(T)',
-            'ADC(1)', 'ADC(2)', 'ADC(2)-s', 'ADC(2)-X', 'ADC(3)'
+            'ADC(1)', 'ADC(2)', 'ADC(2)-s', 'ADC(2)-X', 'ADC(3)',
+            'CVS-ADC(1)', 'CVS-ADC(2)', 'CVS-ADC(2)-s', 'CVS-ADC(2)-X', 'CVS-ADC(3)',
         ]
 
     def after_parsing(self):
@@ -1046,8 +1047,8 @@ cannot be determined. Rerun without `$molecule read`."""
                     # ground state energy, rather than just the EE;
                     # this will be more accurate.
                     if 'Total energy for state' in line:
-                        energy = utils.convertor(float(line.split()[5]), 'hartree', 'wavenumber')
-                        etenergy = energy - utils.convertor(self.scfenergies[-1], 'eV', 'wavenumber')
+                        energy = utils.convertor(float(line.split()[5]), 'hartree', 'eV')
+                        etenergy = energy - utils.convertor(self.scfenergies[-1], 'hartree', 'eV')
                         etenergies.append(etenergy)
                     # if 'excitation energy' in line:
                     #     etenergy = utils.convertor(float(line.split()[-1]), 'eV', 'wavenumber')
@@ -1187,30 +1188,13 @@ cannot be determined. Rerun without `$molecule read`."""
                                         es2es[lastTransition["from"]] = []
                                         es2es[lastTransition["from"]].append(lastTransition)
                                         lastTransition = {}
-                            #     if line.strip().split()[-1] == "[converged]":
-                            #         etconv.append(True)
-                            #     else:
-                            #         etconv.append(False)
-                            #     etmult.append(line.strip().split()[3].strip("(),"))
                                 lastTransition["from"] = int(lline[4])
                                 lastTransition["to"] = int(lline[8][:-1])
                                 self.skip_lines(inputfile, ['dashes'])
                             if "Excitation energy:" in line:
                                 lastTransition["etenergy"] = float(lline[-2])
-                            # if "PE ptSS energy correction:" in line:
-                            #     self.peenergies["ptSS"].append(float(lline[-2]))
-                            # if "PE ptLR energy correction:" in line:
-                            #     self.peenergies["ptLR"].append(float(lline[-2]))
-                            # if "Osc. strength:" in line:
-                            #     etoscs.append(float(lline[-1]))
-                            # if "Trans. dip. moment [a.u.]:" in line:
-                            #     ettransdipmoms.append([float(i.strip(' ,()[]')) for i in lline[-3:]])
                             line = next(inputfile)
-                    # for bla in es2es[1]:
-                    #     print(bla["etenergy"])
-
-                    # print(etconv, etmult, etenergies, ettransdipmoms, etdipmoms)
-                    # print(etsecs)
+                    
                     self.set_attribute('etenergies', etenergies)
                     self.set_attribute('etsyms', etsyms)
                     self.set_attribute('etoscs', etoscs)
@@ -1253,8 +1237,6 @@ cannot be determined. Rerun without `$molecule read`."""
                             etenergies.append(float(lline[-2]))
                         if "PE ptSS energy correction:" in line:
                             self.peenergies["ptSS"].append(float(lline[-2]))
-                        if "PE ptLR energy correction:" in line:
-                            self.peenergies["ptLR"].append(float(lline[-2]))
                         if "Pole strength:" in line:
                             etoscs.append(float(lline[-1]))
                         if "Trans. dip. moment [a.u.]:" in line:
@@ -1270,25 +1252,41 @@ cannot be determined. Rerun without `$molecule read`."""
                             line = next(inputfile)
                             while list(set(line.strip())) != ['-']:
                                 ampl_line = line.strip().split()
-                                if len(ampl_line) == single_exc_elements:
+                                if len(ampl_line) == single_ion_elements:
                                     # i, a, v
                                     sec.append([ampl_line[i] for i in [0, 3, -1]])
-                                elif len(ampl_line) == double_exc_elements:
+                                elif len(ampl_line) == double_ion_elements:
                                     # i, j, a, b, v
                                     sec.append([ampl_line[i] for i in [0, 3, 6, 9, -1]])
                                 line = next(inputfile)
                             etsecs.append(sec)
-                        if "Exciton analysis of the transition density matrix" in line:
-                            while "omega =" not in line:
-                                if "|<r_e - r_h>| [Ang]:" in line:
-                                    etelectronholedists.append(float(line.strip().split()[-1]))
-                                line = next(inputfile)
                         line = next(inputfile)
 
-                    # read state->state
+                    # read ES->ES
+                    es2es = {}
                     if "Transition Summary" in line:
-                        pass
-
+                        lastTransition = None
+                        while 'Time of ADC calculation:' not in line:
+                            lline = line.strip().split()
+                            if 'Transition from ionized state' in line:
+                                if lastTransition is None:
+                                    lastTransition = {}
+                                else:
+                                    if lastTransition["from"] in es2es:
+                                        es2es[lastTransition["from"]].append(lastTransition)
+                                        lastTransition = {}
+                                    else:
+                                        es2es[lastTransition["from"]] = []
+                                        es2es[lastTransition["from"]].append(lastTransition)
+                                        lastTransition = {}
+                                lastTransition["from"] = int(lline[4])
+                                lastTransition["to"] = int(lline[8][:-1])
+                                self.skip_lines(inputfile, ['dashes'])
+                            if "Excitation energy:" in line:
+                                lastTransition["etenergy"] = float(lline[-2])
+                            if "Osc. strength:" in line:
+                                lastTransition["etosc"] = float(lline[-1])
+                            line = next(inputfile)
                     # print(etconv, etmult, etenergies, ettransdipmoms, etdipmoms)
                     # print(etsecs)
                     self.set_attribute('etenergies', etenergies)
@@ -1298,6 +1296,7 @@ cannot be determined. Rerun without `$molecule read`."""
                     self.set_attribute('etmult', etmult)
                     self.set_attribute('etconv', etconv)
                     self.set_attribute('ettransdipmoms', ettransdipmoms)
+                    self.set_attribute('es2es', es2es)
                     self.set_attribute('etelectronholedists',
                                        etelectronholedists)
                     self.set_attribute('etdipmoms', etdipmoms)

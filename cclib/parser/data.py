@@ -116,6 +116,7 @@ class ccData(object):
        "etsyms":           Attribute(list,             'symmetry',                    'transitions'),
        "etconv":           Attribute(list,             'converged',                   'transitions'),
        "etmult":           Attribute(list,             'multipliciy',                 'transitions'),
+       "es2es":            Attribute(dict,             'state to state transitions',  'transitions'),
        "ettransdipmoms":   Attribute(numpy.ndarray,    'trans. dip. moments [a.u.]',  'transitions'),
        "etdipmoms":        Attribute(numpy.ndarray,    'exc. dip. moments [a.u.]',    'transitions'),
        "etelectronholedists":        Attribute(numpy.ndarray,    'electron-hole-distance [Ang]',    'transitions'),
