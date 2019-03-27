@@ -1095,7 +1095,7 @@ cannot be determined. Rerun without `$molecule read`."""
                     # ground state energy, rather than just the EE;
                     # this will be more accurate.
                     if 'Total energy for state' in line:
-                        energy = utils.convertor(float(line.split()[5]), 'hartree', 'eV')
+                        energy = utils.convertor(float(line.split()[-2]), 'hartree', 'eV')
                         etenergy = energy - utils.convertor(self.scfenergies[-1], 'hartree', 'eV')
                         etenergies.append(etenergy)
                     # if 'excitation energy' in line:
