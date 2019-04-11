@@ -709,12 +709,11 @@ cannot be determined. Rerun without `$molecule read`."""
 
             # Extract the atomic numbers and coordinates of the atoms.
             if 'Standard Nuclear Orientation' in line:
-                if "Angstroms" in line:
-                    convertor = lambda x: x
-                elif 'Bohr' in line:
-                    convertor = lambda x: utils.convertor(x, 'bohr', 'Angstrom')
-                else:
-                    raise ValueError("Unknown units in coordinate header: {}".format(line))
+                conversion = 1.0
+                if not "Anstrom" in line:
+                    conversion = utils.convertor(conversion, "bohr", "Angstrom") 
+                if not hasattr(self, 'atomcoords'):
+                    self.atomcoords = []
                 self.skip_lines(inputfile, ['cols', 'dashes'])
                 atomelements = []
                 atomcoords = []
@@ -722,7 +721,8 @@ cannot be determined. Rerun without `$molecule read`."""
                 while list(set(line.strip())) != ['-']:
                     entry = line.split()
                     atomelements.append(entry[1])
-                    atomcoords.append([convertor(float(value)) for value in entry[2:]])
+                    atms = list(map(float, entry[2:]))
+                    atomcoords.append([a*conversion for a in atms])
                     line = next(inputfile)
 
                 self.append_attribute('atomcoords', atomcoords)
