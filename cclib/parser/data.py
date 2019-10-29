@@ -128,6 +128,8 @@ class ccData:
        "etsyms":           Attribute(list,             'symmetry',                    'transitions'),
        "etconv":           Attribute(list,             'converged',                   'transitions'),
        "etmult":           Attribute(list,             'multipliciy',                 'transitions'),
+       "ettotenergies":    Attribute(numpy.ndarray,    'total energy of exc. state [a.u.]', 'transitions'),
+       "ets2":             Attribute(numpy.ndarray,    'S^2 value of elec. transitions', 'transitions'),
        "es2es":            Attribute(dict,             'state to state transitions',  'transitions'),
        "ettransdipmoms":   Attribute(numpy.ndarray,    'trans. dip. moments [a.u.]',  'transitions'),
        "etdipmoms":        Attribute(numpy.ndarray,    'exc. dip. moments [a.u.]',    'transitions'),

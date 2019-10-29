@@ -710,7 +710,7 @@ cannot be determined. Rerun without `$molecule read`."""
             # Extract the atomic numbers and coordinates of the atoms.
             if 'Standard Nuclear Orientation' in line:
                 conversion = 1.0
-                if not "Anstrom" in line:
+                if not "Angstrom" in line:
                     conversion = utils.convertor(conversion, "bohr", "Angstrom") 
                 if not hasattr(self, 'atomcoords'):
                     self.atomcoords = []
@@ -744,7 +744,7 @@ cannot be determined. Rerun without `$molecule read`."""
 
             # Number of electrons.
             # Useful for determining the number of occupied/virtual orbitals.
-            if 'Nuclear Repulsion Energy' in line:
+            if 'Nuclear Repulsion Energy' in line and not 'Gradient of' in line:
                 line = next(inputfile)
                 nelec_re_string = r'There are(\s+[0-9]+) alpha and(\s+[0-9]+) beta electrons'
                 match = re.findall(nelec_re_string, line.strip())
@@ -1053,6 +1053,45 @@ cannot be determined. Rerun without `$molecule read`."""
                 t1_squared = float(line.split()[3])
                 t1_norm = math.sqrt(t1_squared)
                 self.metadata["t1_diagnostic"] = t1_norm / math.sqrt(2 * (self.nalpha + self.nbeta))
+            # EOMEE/EOMSF
+            if 'Solving for EOM' in line:
+                print("Found EOM calculation.")
+                exc_key = "EOMEE"
+                if "SF" in line:
+                    print("Spin-flip.")
+                    exc_key = "EOMSF"
+                # this key is used to refer to exc. state data (energies, s^2, etc.)
+                trans_name = "{} transition".format(exc_key)
+                prop_trans_name = "Excited state properties for  {}-CCSD transition".format(exc_key)
+
+                etenergies = []
+                ettotenergies = []
+                etsyms = []
+                etoscs = []
+                etsecs = []
+                ets2 = []
+                while "Total ccman2 time" not in line:
+                    line = next(inputfile).strip()
+                    # get energies
+                    if trans_name in line:
+                        line = next(inputfile).strip()
+                        elems = line.split()
+                        ettotenergies.append(float(elems[3]))
+                        etenergies.append(float(elems[-2]))
+                    # read properties
+                    if prop_trans_name in line:
+                        line = next(inputfile).strip()
+                        while line != "":
+                            line = next(inputfile).strip()
+                            if "<S^2> =" in line:
+                                elems = line.split()
+                                ets2.append(float(elems[-1]))
+                # print(ettotenergies, etenergies, ets2)
+                self.set_attribute("ettotenergies", numpy.array(ettotenergies))
+                self.set_attribute("etenergies", numpy.array(etenergies))
+                self.set_attribute("ets2", numpy.array(ets2))
+
+            # END of EOM-CC stuff
 
             # Electronic transitions. Works for both CIS and TDDFT.
             if 'Excitation Energies' in line:
