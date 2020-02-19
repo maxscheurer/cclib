@@ -1012,10 +1012,8 @@ cannot be determined. Rerun without `$molecule read`."""
 
             # EOMEE/EOMSF
             if 'Solving for EOM' in line:
-                print("Found EOM calculation.")
                 exc_key = "EOMEE"
                 if "SF" in line:
-                    print("Spin-flip.")
                     exc_key = "EOMSF"
                 # this key is used to refer to exc. state data (energies, s^2, etc.)
                 trans_name = "{} transition".format(exc_key)
@@ -1023,6 +1021,8 @@ cannot be determined. Rerun without `$molecule read`."""
 
                 etenergies = []
                 ettotenergies = []
+                etdipmoms = []
+                etconv = []
                 etsyms = []
                 etoscs = []
                 etsecs = []
@@ -1035,17 +1035,28 @@ cannot be determined. Rerun without `$molecule read`."""
                         elems = line.split()
                         ettotenergies.append(float(elems[3]))
                         etenergies.append(float(elems[-2]))
+                    if "Conv-d" in line:
+                        elems = line.split()
+                        if elems[-1] == "yes":
+                            etconv.append(True)
+                        else:
+                            etconv.append(False)
                     # read properties
                     if prop_trans_name in line:
-                        line = next(inputfile).strip()
                         while line != "":
                             line = next(inputfile).strip()
                             if "<S^2> =" in line:
                                 elems = line.split()
                                 ets2.append(float(elems[-1]))
+                            if "Dipole moment (a.u.):" in line:
+                                elems = line.split()
+                                dipmom_debye = utils.convertor(float(elems[3]), 'ebohr', 'Debye')
+                                etdipmoms.append(float(dipmom_debye))
                 # print(ettotenergies, etenergies, ets2)
                 self.set_attribute("ettotenergies", numpy.array(ettotenergies))
                 self.set_attribute("etenergies", numpy.array(etenergies))
+                self.set_attribute("etdipmoms", numpy.array(etdipmoms))
+                self.set_attribute("etconv", numpy.array(etconv))
                 self.set_attribute("ets2", numpy.array(ets2))
 
             # END of EOM-CC stuff
@@ -1159,6 +1170,7 @@ cannot be determined. Rerun without `$molecule read`."""
                         have_adc_data = True
                 if have_adc_data:
                     etenergies = []
+                    ettotenergies = []
                     etsyms = []
                     etmult = []
                     etoscs = []
@@ -1179,6 +1191,8 @@ cannot be determined. Rerun without `$molecule read`."""
                             etmult.append(line.strip().split()[3].strip("(),"))
                             self.skip_lines(inputfile, ['dashes'])
                         lline = line.strip().split()
+                        if "Total energy:" in line or "Total energy (PCM 0th order)" in line:
+                            ettotenergies.append(float(lline[-2]))
                         if "Excitation energy:" in line or "Excitation energy (PCM 0th order)" in line:
                             etenergies.append(float(lline[-2]))
                         if "PE ptSS energy correction:" in line:
@@ -1237,11 +1251,19 @@ cannot be determined. Rerun without `$molecule read`."""
                                 self.skip_lines(inputfile, ['dashes'])
                             if "Excitation energy:" in line:
                                 lastTransition["etenergy"] = float(lline[-2])
+                            if "Osc. strength:" in line:
+                                lastTransition["etosc"] = float(lline[-1])
+                            if "Trans. dip. moment [a.u.]:" in line:
+                                lastTransition["etdipmoms"] = numpy.array([
+                                    float(x.strip("['").strip("']").strip(",")) for x in lline[-3:]
+                                ])
                             line = next(inputfile)
-                    
+
                     self.set_attribute('etenergies', etenergies)
+                    self.set_attribute('ettotenergies', ettotenergies)
                     self.set_attribute('etsyms', etsyms)
                     self.set_attribute('etoscs', etoscs)
+                    self.set_attribute('es2es', es2es)
                     self.set_attribute('etsecs', etsecs)
                     self.set_attribute('etmult', etmult)
                     self.set_attribute('etconv', etconv)
