@@ -1177,6 +1177,7 @@ cannot be determined. Rerun without `$molecule read`."""
                     etsecs = []
                     etconv = []
                     ettransdipmoms = []
+                    etdipmoms_comps = []
                     etdipmoms = []
                     etelectronholedists = []
                     spinmap = {'alpha': 0, 'beta': 1}
@@ -1203,6 +1204,10 @@ cannot be determined. Rerun without `$molecule read`."""
                             etoscs.append(float(lline[-1]))
                         if "Trans. dip. moment [a.u.]:" in line:
                             ettransdipmoms.append([float(i.strip(' ,()[]')) for i in lline[-3:]])
+                        if "Dip. moment [a.u.]:" in line:
+                            etdipmoms_comps.append(numpy.array([
+                                float(x.strip("['").strip("']").strip(",")) for x in lline[-3:]
+                            ]))
                         if "Total dipole [Debye]:" in line:
                             etdipmoms.append(float(lline[-1]))
                         if "Important amplitudes:" in line:
@@ -1271,6 +1276,7 @@ cannot be determined. Rerun without `$molecule read`."""
                     self.set_attribute('etelectronholedists',
                                        etelectronholedists)
                     self.set_attribute('etdipmoms', etdipmoms)
+                    self.set_attribute('etdipmoms_comps', etdipmoms_comps)
 
             if 'Ionized State Summary' in line:
                 have_adc_data = False
