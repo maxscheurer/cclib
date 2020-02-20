@@ -122,6 +122,7 @@ class ccData(object):
        "ettransdipmoms":   Attribute(numpy.ndarray,    'trans. dip. moments [a.u.]',  'transitions'),
        "etdipmoms":        Attribute(numpy.ndarray,    'exc. dip. moments [D]',    'transitions'),
        "etdipmoms_comps":        Attribute(numpy.ndarray,    'components of exc. dip. moments [a.u.]',    'transitions'),
+       "mp2_dipmom":        Attribute(numpy.ndarray,    'MP(2) dipole moment',    'transitions'),
        "etelectronholedists":        Attribute(numpy.ndarray,    'electron-hole-distance [Ang]',    'transitions'),
        "freeenergy":       Attribute(float,            'free energy',                 'properties:energy'),
        "fonames":          Attribute(list,             'orbital names',               'fragments'),

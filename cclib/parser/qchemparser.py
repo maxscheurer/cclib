@@ -1163,6 +1163,17 @@ cannot be determined. Rerun without `$molecule read`."""
                 self.set_attribute('etoscs', etoscs)
                 self.set_attribute('etsecs', etsecs)
 
+            if 'MP(2) Summary' in line:
+                self.skip_lines(inputfile, ['dashes'])
+                while list(set(line.strip())) != ['-']:
+                    line = next(inputfile)
+                    lline = line.strip().split()
+                    if "Dip. moment [a.u.]:" in line:
+                        mp2_dipmom = numpy.array([
+                            float(x.strip("['").strip("']").strip(",")) for x in lline[-3:]
+                        ])
+                        self.set_attribute('mp2_dipmom', mp2_dipmom)
+
             if 'Excited State Summary' in line:
                 have_adc_data = False
                 for method in self.metadata["methods"]:
@@ -1184,6 +1195,7 @@ cannot be determined. Rerun without `$molecule read`."""
                     # self.skip_lines(inputfile, ['dashes', 'blank'])
                     line = next(inputfile)
                     while 'Time of ADC calculation:' not in line and "Transition Summary" not in line:
+                        
                         if 'Excited state' in line:
                             if line.strip().split()[-1] == "[converged]":
                                 etconv.append(True)
