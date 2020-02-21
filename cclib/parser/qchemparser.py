@@ -1249,22 +1249,21 @@ cannot be determined. Rerun without `$molecule read`."""
                     # read ES->ES
                     es2es = {}
                     if "Transition Summary" in line:
-                        lastTransition = None
+                        lastTransition = {}
                         while 'Time of ADC calculation:' not in line:
                             lline = line.strip().split()
                             if 'Transition from excited state' in line:
-                                if lastTransition is None:
-                                    lastTransition = {}
-                                else:
-                                    if lastTransition["from"] in es2es:
-                                        es2es[lastTransition["from"]].append(lastTransition)
-                                        lastTransition = {}
-                                    else:
-                                        es2es[lastTransition["from"]] = []
-                                        es2es[lastTransition["from"]].append(lastTransition)
-                                        lastTransition = {}
+                                lastTransition = {}
                                 lastTransition["from"] = int(lline[4])
                                 lastTransition["to"] = int(lline[8][:-1])
+                                # if lastTransition is None:
+                                #     lastTransition = {}
+                                # else:
+                                if lastTransition["from"] in es2es:
+                                    es2es[lastTransition["from"]].append(lastTransition)
+                                else:
+                                    es2es[lastTransition["from"]] = []
+                                    es2es[lastTransition["from"]].append(lastTransition)
                                 self.skip_lines(inputfile, ['dashes'])
                             if "Excitation energy:" in line:
                                 lastTransition["etenergy"] = float(lline[-2])
