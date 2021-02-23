@@ -1135,9 +1135,14 @@ cannot be determined. Rerun without `$molecule read`."""
                             # starts reindexing virtual orbitals at 1.
                             if line[5] == '(':
                                 ttype = 'X'
-                                startidx = int(line[6:9]) - 1
-                                endidx = int(line[17:20]) - 1 + self.nalpha
-                                contrib = float(line[34:41].strip())
+                                indc = re.findall('\(.*?\)', line)
+                                indc = [idx.strip("(").strip(")").strip() for idx in indc]
+                                # startidx = int(line[6:9]) - 1
+                                # endidx = int(line[17:20]) - 1 + self.nalpha
+                                startidx = int(indc[0]) - 1
+                                endidx = int(indc[1]) - 1 + self.nalpha
+                                # contrib = float(line[34:41].strip())
+                                contrib = float(line.split(" ")[-1])
                             else:
                                 assert line[5] == ":"
                                 ttype = line[4]
