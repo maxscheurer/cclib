@@ -1063,6 +1063,7 @@ cannot be determined. Rerun without `$molecule read`."""
                 prop_trans_name = "Excited state properties for  {}-CCSD transition".format(exc_key)
 
                 etenergies = []
+                etirreps = []
                 ettotenergies = []
                 etdipmoms = []
                 etconv = []
@@ -1074,6 +1075,8 @@ cannot be determined. Rerun without `$molecule read`."""
                     line = next(inputfile).strip()
                     # get energies
                     if trans_name in line:
+                        irrep = line.strip().split()[-1].split("/")[-1]
+                        etirreps.append(irrep)
                         line = next(inputfile).strip()
                         elems = line.split()
                         ettotenergies.append(float(elems[3]))
@@ -1098,6 +1101,7 @@ cannot be determined. Rerun without `$molecule read`."""
                 # print(ettotenergies, etenergies, ets2)
                 self.set_attribute("ettotenergies", numpy.array(ettotenergies))
                 self.set_attribute("etenergies", numpy.array(etenergies))
+                self.set_attribute("etirreps", etirreps)
                 self.set_attribute("etdipmoms", numpy.array(etdipmoms))
                 self.set_attribute("etconv", numpy.array(etconv))
                 self.set_attribute("ets2", numpy.array(ets2))
@@ -1222,6 +1226,7 @@ cannot be determined. Rerun without `$molecule read`."""
                         have_adc_data = True
                 if have_adc_data:
                     etenergies = []
+                    etirreps = []
                     ettotenergies = []
                     etsyms = []
                     etmult = []
@@ -1243,6 +1248,7 @@ cannot be determined. Rerun without `$molecule read`."""
                             else:
                                 etconv.append(False)
                             etmult.append(line.strip().split()[3].strip("(),"))
+                            etirreps.append(line.strip().split()[4].strip(")"))
                             self.skip_lines(inputfile, ['dashes'])
                         lline = line.strip().split()
                         if "Total energy:" in line or "Total energy (PCM 0th order)" in line:
@@ -1317,6 +1323,7 @@ cannot be determined. Rerun without `$molecule read`."""
                             line = next(inputfile)
 
                     self.set_attribute('etenergies', etenergies)
+                    self.set_attribute('etirreps', etirreps)
                     self.set_attribute('ettotenergies', ettotenergies)
                     self.set_attribute('etsyms', etsyms)
                     self.set_attribute('etoscs', etoscs)
