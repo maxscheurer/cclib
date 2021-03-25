@@ -119,6 +119,7 @@ class ccData:
        "enthalpy":         Attribute(float,            'enthalpy',                    'properties'),
        "entropy":          Attribute(float,            'entropy',                     'properties'),
        "etenergies":       Attribute(numpy.ndarray,    'electronic transitions',      'transitions'),
+       "etirreps":         Attribute(list,    'irreps of excited states',    'transitions'),
        "etoscs":           Attribute(numpy.ndarray,    'oscillator strength',         'transitions'),
        "etdips":           Attribute(numpy.ndarray,    'electic transition dipoles',  'transitions'),
        "etveldips":        Attribute(numpy.ndarray,    'velocity-gauge electric transition dipoles', 'transitions'),
