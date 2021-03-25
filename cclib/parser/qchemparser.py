@@ -1127,7 +1127,8 @@ cannot be determined. Rerun without `$molecule read`."""
                         sec = []
                         while line.strip() != '':
                             if self.unrestricted:
-                                spin = spinmap[line[42:47].strip()]
+                                spin_string = line.split()[-1]
+                                spin = spinmap[spin_string]
                             else:
                                 spin = 0
 
@@ -1146,13 +1147,24 @@ cannot be determined. Rerun without `$molecule read`."""
                                 startidx = int(indc[0]) - 1
                                 endidx = int(indc[1]) - 1 + self.nalpha
                                 # contrib = float(line[34:41].strip())
-                                contrib = float(line.split(" ")[-1])
+                                if self.unrestricted:
+                                    contrib = float(line.split(" ")[-2])
+                                else:
+                                    contrib = float(line.split(" ")[-1])
                             else:
                                 assert line[5] == ":"
                                 ttype = line[4]
-                                startidx = int(line[9:12]) - 1
-                                endidx = int(line[20:23]) - 1 + self.nalpha
-                                contrib = float(line[37:44].strip())
+                                # startidx = int(line[9:12]) - 1
+                                # endidx = int(line[20:23]) - 1 + self.nalpha
+                                # contrib = float(line[37:44].strip())
+                                indc = re.findall('\(.*?\)', line)
+                                indc = [idx.strip("(").strip(")").strip() for idx in indc]
+                                startidx = int(indc[0]) - 1
+                                endidx = int(indc[1]) - 1 + self.nalpha
+                                if self.unrestricted:
+                                    contrib = float(line.split(" ")[-2])
+                                else:
+                                    contrib = float(line.split(" ")[-1])
 
                             start = (startidx, spin)
                             end = (endidx, spin)

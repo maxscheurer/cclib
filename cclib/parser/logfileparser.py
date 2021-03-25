@@ -434,7 +434,7 @@ class Logfile(object):
             if hasattr(self, name):
                 delattr(self, name)
 
-    def set_attribute(self, name, value, check=True):
+    def set_attribute(self, name, value, check=False):
         """Set an attribute and perform a check when it already exists.
 
         Note that this can be used for scalars and lists alike, whenever we want

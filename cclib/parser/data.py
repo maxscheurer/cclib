@@ -110,6 +110,7 @@ class ccData(object):
        "enthalpy":         Attribute(float,            'enthalpy',                    'properties'),
        "entropy":          Attribute(float,            'entropy',                     'properties'),
        "etenergies":       Attribute(numpy.ndarray,    'electronic transitions',      'transitions'),
+       "etirreps":         Attribute(list,    'irreps of excited states',    'transitions'),
        "etoscs":           Attribute(numpy.ndarray,    'oscillator strength',         'transitions'),
        "etrotats":         Attribute(numpy.ndarray,    'rotatory strength',           'transitions'),
        "etsecs":           Attribute(list,             'one excited config',          'transitions'),
